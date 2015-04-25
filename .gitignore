@@ -53,5 +53,6 @@ Temporary Items
 *.lastbuildstate
 *.pdb
 *.ilk
+*.opensdf
 Debug/Tree.exe
 Debug/Tree.pdb
