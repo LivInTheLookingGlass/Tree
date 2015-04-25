@@ -31,6 +31,10 @@ This method allows you to remove any item from the tree, either by ordered index
     T(unsigned long long chronological_index);  (not yet implemented)
 This method allows you to get the data from any known key or index.
 
+    T[string key]
+    T(string key)   (not yet implemented)
+These methods allow you to get the index of an item by its key. The first will get you the sorted index, and the second will retrieve its chronological index.
+
     T.Queue(int cmd, string data);
 This method will queue up any command into the built-in threadpool. Currently supported commands are 0 for remove, and 1 for add. Addition data format is "key,data". This will be changed to a pair<string,string> in a future release to allow for easier compatibility.
 
