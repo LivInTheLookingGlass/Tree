@@ -1,4 +1,4 @@
-# Tree (Experimental)
+# Tree
 An alternative, versatile database based off the Red Black Tree
 
 ---
@@ -35,7 +35,7 @@ This method allows you to get the data from any known key or index.
     T(string key)   (not yet implemented)
 These methods allow you to get the index of an item by its key. The first will get you the sorted index, and the second will retrieve its chronological index.
 
-    T.Queue(int cmd, string data);
+    T.Queue(int cmd, string data);  (implemented in experimental)
 This method will queue up any command into the built-in threadpool. Currently supported commands are 0 for remove, and 1 for add. Addition data format is "key,data". This will be changed to a pair<string,string> in a future release to allow for easier compatibility.
 
     T.print();
@@ -46,10 +46,10 @@ This method will queue up any command into the built-in threadpool. Currently su
     T.trprint();  (not yet implemented)
 Each of these will print all nodes in a different format. The first two will print in sorted order. The second pair will print in chronological order. The last pair will print in a tree-formatted manner, similar to in DOS.
 
-    T.pauseQueue();
+    T.pauseQueue();  (implemented in experimental)
 If you want your program to work idly, this is the easiest way to do it. Calling this method will put the threadpool into sleep mode, only checking their "alive" flag every 10 milliseconds.
 
-    T.startQueue();
+    T.startQueue();  (implemented in experimental)
 This method will undo the action from the above. It will have the threadpool constantly poll the command queue, at a rate of once per 0.25 milliseconds
 
 There are more coming, but their support is currently sparse enough as to not deserve over-mention. They will include:
