@@ -3,6 +3,12 @@ An alternative, versatile database based off the Red Black Tree
 
 ---
 
+## Dependencies
+
+Boost 1.5.3 or greater
+
+C++11 or greater
+
 ## API
 
 **Constructor**
