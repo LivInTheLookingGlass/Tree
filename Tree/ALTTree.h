@@ -7,7 +7,10 @@
 #include <vector>
 #include <mutex>
 #include "ALTNode.h"
-#include "CommandQueue.h"
+#define _experimental_ 1
+#if _experimental_ == 1
+	#include "CommandQueue.h"
+#endif
 
 using namespace std;
 
@@ -15,7 +18,9 @@ class ALTNode;
 class CommandQueue;
 class ALTTree	{
 private:
+#if _experimental_ == 1
 	CommandQueue *Q;
+#endif
 	ALTNode *root, *head, *tail, *chead, *ctail;
 	string search(unsigned long long index);
 	unsigned long long sz;
@@ -25,7 +30,6 @@ public:
 	ALTTree(ALTNode *r);
 	~ALTTree();
 	int Valid();
-	void Queue(int cmd, string input);
 	void add(string key, string data);
 	void add(string key, string data, bool verbose);
 	void push(string key);
@@ -64,10 +68,13 @@ public:
 	vector<unsigned long long> allStats();
 	pair<string, unsigned long long> nodeStats(string k);
 	unsigned long long size();
+#if _experimental_ == 1
+	void Queue(int cmd, string input);
 	bool isQueueEmpty();
 	unsigned long long queueSize();
 	void startQueue();
 	void pauseQueue();
+#endif
 };
 
 #endif
