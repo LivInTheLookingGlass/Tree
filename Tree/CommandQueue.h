@@ -3,9 +3,11 @@
 
 #include <string>
 #include <cstdlib>
+#include <boost/multiprecision/cpp_int.hpp>
 #include "ALTTree.h"
 
 using namespace std;
+namespace bst = boost::multiprecision;
 
 const int rm = 0, ad = 1;
 
@@ -17,7 +19,7 @@ private:
 	vector<thread> pool;
 	CNode *head, *tail;
 	ALTTree *t;
-	unsigned long long sz;
+	bst::cpp_int sz;
 	volatile bool alive;
 public:
 	CommandQueue(ALTTree *tree);
@@ -26,7 +28,7 @@ public:
 	void enqueue(int cmd, string input);
 	CNode *dequeue();
 	bool isEmpty();
-	unsigned long long size();
+	bst::cpp_int size();
 	void process();
 	void start();
 	void kill();

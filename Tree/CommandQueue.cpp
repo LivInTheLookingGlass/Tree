@@ -62,8 +62,8 @@ bool CommandQueue::isEmpty()	{
 	return !head;
 }
 
-unsigned long long CommandQueue::size()	{
-	unsigned long long i;
+bst::cpp_int CommandQueue::size()	{
+	bst::cpp_int i;
 	m.lock();
 	i = sz;
 	m.unlock();

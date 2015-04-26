@@ -6,6 +6,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <boost/multiprecision/cpp_int.hpp>
 #include "ALTNode.h"
 #define _experimental_ 1
 #if _experimental_ == 1
@@ -13,6 +14,7 @@
 #endif
 
 using namespace std;
+namespace bst = boost::multiprecision;
 
 class ALTNode;
 class CommandQueue;
@@ -24,6 +26,7 @@ private:
 	ALTNode *root, *head, *tail, *chead, *ctail;
 	string search(unsigned long long index);
 	unsigned long long sz;
+	bst::cpp_int szz;
 	mutex m;
 public:
 	ALTTree();
@@ -71,7 +74,7 @@ public:
 #if _experimental_ == 1
 	void Queue(int cmd, string input);
 	bool isQueueEmpty();
-	unsigned long long queueSize();
+	bst::cpp_int queueSize();
 	void startQueue();
 	void pauseQueue();
 #endif

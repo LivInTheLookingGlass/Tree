@@ -34,7 +34,7 @@ bool testF()	{
 	T.startQueue();
 	cout << endl << "Queue population took " << elapsed.count() << " seconds for " << init << " nodes." << endl;
 	while(!T.isQueueEmpty())	{
-		cout << (1.0 - (double)T.queueSize() / init) * 100 << "% complete. " << endl;
+		cout << (1.0 - T.queueSize().convert_to<double>() / init) * 100 << "% complete. " << endl;
 		this_thread::sleep_for(chrono::seconds(1));
 	}
 	cout << "Tree population compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
