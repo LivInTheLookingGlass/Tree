@@ -7,7 +7,8 @@
 #include <vector>
 #include <mutex>
 #include "ALTNode.h"
-#if _experimental_
+#define _experimental_ 1
+#if _experimental_ == 1
 	#include "CommandQueue.h"
 #endif
 
@@ -17,7 +18,7 @@ class ALTNode;
 class CommandQueue;
 class ALTTree	{
 private:
-#if _experimental_
+#if _experimental_ == 1
 	CommandQueue *Q;
 #endif
 	ALTNode *root, *head, *tail, *chead, *ctail;
@@ -67,7 +68,7 @@ public:
 	vector<unsigned long long> allStats();
 	pair<string, unsigned long long> nodeStats(string k);
 	unsigned long long size();
-#if _experimental_
+#if _experimental_ == 1
 	void Queue(int cmd, string input);
 	bool isQueueEmpty();
 	unsigned long long queueSize();

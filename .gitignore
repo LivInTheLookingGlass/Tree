@@ -56,3 +56,4 @@ Temporary Items
 *.opensdf
 Debug/Tree.exe
 Debug/Tree.pdb
+*.sdf
