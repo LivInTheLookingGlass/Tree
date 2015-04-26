@@ -22,13 +22,13 @@ int main(int argv, char *argc)	{
 }
 
 bool testF()	{
-	cout << "Populating initial queue ... " << endl;
+	cout << "Populating initial tree ... " << endl;
 	string tmp = "        ";
-	T.pauseQueue();
+//	T.pauseQueue();
 	auto start = chrono::high_resolution_clock::now();
 
 	queue(0,init,true);
-	//queue(1,init,false);
+/*	//queue(1,init,false);
 
 	chrono::duration<double> elapsed = chrono::high_resolution_clock::now() - start;
 	T.startQueue();
@@ -36,7 +36,7 @@ bool testF()	{
 	while(!T.isQueueEmpty())	{
 		cout << (1.0 - (double)T.queueSize() / init) * 100 << "% complete. " << endl;
 		this_thread::sleep_for(chrono::seconds(1));
-	}
+	}*/
 	cout << "Tree population compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
 	while(getInput())
 		;
@@ -57,7 +57,8 @@ void queue(unsigned long long i, unsigned long long end, bool add)	{
 		tmp[5] = (i / 1099511627776) % 256;
 		tmp[6] = (i / 281474976710656) % 256;
 		tmp[7] = (i / 72057594037927936) % 256;
-		add ? T.Queue(1, tmp + ",1") : T.Queue(0, tmp);
+		//add ? T.Queue(1, tmp + ",1") : T.Queue(0, tmp);
+		add ? T.add(tmp,"1") : T -= tmp;
 	}
 }
 
