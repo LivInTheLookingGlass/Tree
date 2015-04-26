@@ -6,25 +6,38 @@
 #ifndef NAN
 	#define NAN 18446744073709551615
 #endif
+#define _experimental_ false
 
 using namespace std;
 
 ALTTree::ALTTree()	{
+<<<<<<< HEAD
 #if _experimental_ == 1
+=======
+#if _experimental_
+>>>>>>> master
 	Q = new CommandQueue(this,2);
 #endif
 	root = head = tail = chead = ctail = NULL;
 }
 
 ALTTree::ALTTree(ALTNode *r)	{
+<<<<<<< HEAD
 #if _experimental_ == 1
+=======
+#if _experimental_
+>>>>>>> master
 	Q = new CommandQueue(this,2);
 #endif
 	(root = head = tail = chead = ctail = r)->a_balance(); //sets all pointers to r, then calls balance
 }
 
 ALTTree::~ALTTree()	{
+<<<<<<< HEAD
 #if _experimental_ == 1
+=======
+#if _experimental_
+>>>>>>> master
 	delete Q;
 #endif
 	delete root;
@@ -269,7 +282,11 @@ unsigned long long ALTTree::size()	{
 	return root->updateSubindex();
 }
 
+<<<<<<< HEAD
 #if _experimental_ == 1
+=======
+#if _experimental_
+>>>>>>> master
 
 void ALTTree::Queue(int cmd, string input)	{
 	Q->enqueue(cmd,input);
