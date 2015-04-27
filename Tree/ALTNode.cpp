@@ -164,6 +164,89 @@ bool ALTNode::add(string k, string d, ALTNode *n, ALTNode *p, bool push)	{
 	return balanced;
 }
 
+bool ALTNode::add(string k, string d, bool push)	{
+	bool balanced = false, a, b;
+	//locking logic
+	if (!this) //known balance error prevents this function from working all the time
+		return false;
+	try	{
+		lock_guard<mutex> mu(m);
+		a = k < key;
+		b = k > key;
+	}
+	catch	(exception e)	{
+		cout << e.what() << endl;
+		if (parent)
+			parent->add(k,d,push);
+		else if (tree)
+			tree->add(k,d);
+		else
+			return false;
+	}
+	//end locking logic
+	if (a && left)	{
+		balanced = left->add(k,d,push);
+	}
+	else if (b && right)	{
+		balanced = right->add(k,d,push);
+	}
+	else if (a || b)	{
+			ALTNode *tmp = new ALTNode(k,d,tree,this);
+		try	{
+			lock_guard<mutex> mu(m);
+			if (!push)	{
+				tmp->setChronPrev(tree->getChronTail());
+				tmp->getChronPrev()->setChronNext(tmp);
+				tree->setChronTail(tmp);
+			}
+			else	{
+				tmp->setChronNext(tree->getChronHead());
+				tmp->getChronNext()->setChronPrev(tmp);
+				tree->setChronHead(tmp);
+			}
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+			system ("pause");
+		}
+		try	{
+			if (a)	{
+				tmp->setNext(this);
+				tmp->setPrev(prev);
+				if (prev)
+					prev->setNext(tmp);
+				if (this == tree->getHead())
+					tree->setHead(tmp);
+				prev = left = tmp;
+			}
+			else if (b)	{
+				tmp->setNext(n);
+				tmp->setPrev(this);
+				if (next)
+					next->setPrev(tmp);
+				if (this == tree->getTail())
+					tree->setTail(tmp);
+				next = right = tmp;
+			}
+			balanced = tmp->a_balance();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+			system ("pause");
+		}
+	}
+	else if (!a && !b)	{ //multithreading might belong in this case
+		m.lock();
+		cprev = tree->getChronTail();
+		cprev->setChronNext(this);
+		tree->setChronTail(this);
+		data = d;
+		m.unlock();
+		return true;
+	}
+	return balanced;
+}
+
 //could probably have partial multithreading
 bool ALTNode::a_balance()	{
 	if (!parent || tree->getRoot() == this)	{
