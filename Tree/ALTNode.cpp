@@ -75,7 +75,7 @@ int ALTNode::ValidNode () {
 }
 
 void ALTNode::add(string k, string d)	{
-	add(k,d,NULL,NULL,false);
+	add(k,d,false);
 }
 
 //could probably be multithreaded
@@ -220,7 +220,7 @@ bool ALTNode::add(string k, string d, bool push)	{
 				prev = left = tmp;
 			}
 			else if (b)	{
-				tmp->setNext(n);
+				tmp->setNext(next);
 				tmp->setPrev(this);
 				if (next)
 					next->setPrev(tmp);

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int init = 10000;
+int init = 1000;
 
 ALTTree T; 
 

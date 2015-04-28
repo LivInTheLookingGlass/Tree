@@ -58,3 +58,5 @@ Debug/Tree.exe
 Debug/Tree.pdb
 *.sdf
 packages
+*.sdf
+Tree.v11.suo

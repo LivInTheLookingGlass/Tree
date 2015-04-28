@@ -17,6 +17,7 @@ private:
 	bool black;
 	mutex m;
 	bool add(string k, string d, ALTNode *n, ALTNode *p, bool push);
+	bool add(string k, string d, bool push);
 	void push(string k, string d, ALTNode *n, ALTNode *p);
 	void remove(bool verbose);
 	unsigned long long getIndex(string k, unsigned long long i);
