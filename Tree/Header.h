@@ -12,6 +12,7 @@ using namespace std;
 int main(int argv, char *argc);
 bool testF();
 void queue(unsigned long long start, unsigned long long end, bool add);
+void check(unsigned long long i, unsigned long long end);
 bool getInput();
 void getCaps(string &input);
 

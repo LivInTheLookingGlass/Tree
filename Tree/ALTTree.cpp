@@ -11,7 +11,7 @@ using namespace std;
 
 ALTTree::ALTTree()	{
 #if _experimental_ == 1
-	Q = new CommandQueue(this,2);
+	Q = new CommandQueue(this);
 #endif
 	root = head = tail = chead = ctail = NULL;
 }
@@ -92,20 +92,28 @@ bool ALTTree::undo()	{
 string ALTTree::search(string key)	{
 	if (!root)
 		return "";
-	else
+	else 
 		return root->search(key);
 }
 
 string ALTTree::search(unsigned long long index)	{
 	if (!root)
 		return "";
-	else
-		return root->search(index);
+	else	{
+		pauseQueue();
+		string t = root->search(index);
+		startQueue();
+		return t;
+	}
 }
 
 unsigned long long ALTTree::getIndex(string key)	{
-	if (root)
-		return root->getIndex(key);
+	if (root)	{
+		pauseQueue();
+		unsigned long long t = root->getIndex(key);
+		startQueue();
+		return t;
+	}
 	else
 		return NAN;
 }
@@ -121,43 +129,61 @@ string ALTTree::pop()	{
 }
 
 void ALTTree::print()	{
-	if (root)
+	if (root)	{
+		pauseQueue();
 		root->print();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }
 
 void ALTTree::lprint()	{
-	if (head)
+	if (head)	{
+		pauseQueue();
 		head->lprint();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }
 
 void ALTTree::cprint()	{
-	if (chead)
+	if (chead)	{
+		pauseQueue();
 		chead->cprint();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }
 
 void ALTTree::rprint()	{
-	if (root)
+	if (root)	{
+		pauseQueue();
 		root->rprint();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }
 
 void ALTTree::lrprint()	{
-	if (tail)
+	if (tail)	{
+		pauseQueue();
 		tail->lrprint();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }
 
 void ALTTree::crprint()	{
-	if (ctail)
+	if (ctail)	{
+		pauseQueue();
 		ctail->crprint();
+		startQueue();
+	}
 	else
 		cout << "Tree is empty." << endl;
 }

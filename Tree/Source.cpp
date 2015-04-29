@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int init = 1000;
+int init = 100000;
 
 ALTTree T; 
 
@@ -38,6 +38,9 @@ bool testF()	{
 		this_thread::sleep_for(chrono::seconds(1));
 	}
 	cout << "Tree population compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
+	start = chrono::high_resolution_clock::now();
+	check(0,init);
+	cout << "Tree searching compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
 	while(getInput())
 		;
 
@@ -58,6 +61,24 @@ void queue(unsigned long long i, unsigned long long end, bool add)	{
 		tmp[6] = (i / 281474976710656) % 256;
 		tmp[7] = (i / 72057594037927936) % 256;
 		add ? T.Queue(1, tmp + ",1") : T.Queue(0, tmp);
+	}
+}
+
+void check(unsigned long long i, unsigned long long end)	{
+	string tmp = "        ";
+	for (; i < end; i++)	{
+		if (T[i] == "")	{
+			tmp[0] = i % 256;
+			tmp[1] = (i / 256) % 256;
+			tmp[2] = (i / 65536) % 256;
+			tmp[3] = (i / 16777216) % 256;
+			tmp[4] = (i / 4294967296) % 256;
+			tmp[5] = (i / 1099511627776) % 256;
+			tmp[6] = (i / 281474976710656) % 256;
+			tmp[7] = (i / 72057594037927936) % 256;
+			cout << "First missing item: " << tmp << " (" << i << ")" << endl;
+			return;
+		}
 	}
 }
 

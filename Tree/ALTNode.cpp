@@ -170,7 +170,8 @@ bool ALTNode::add(string k, string d, bool push)	{
 	if (!this) //known balance error prevents this function from working all the time
 		return false;
 	try	{
-		lock_guard<mutex> mu(m);
+		while (!m.try_lock())
+			this_thread::sleep_for(chrono::milliseconds(1));
 		a = k < key;
 		b = k > key;
 	}
@@ -183,17 +184,9 @@ bool ALTNode::add(string k, string d, bool push)	{
 		else
 			return false;
 	}
-	//end locking logic
-	if (a && left)	{
-		balanced = left->add(k,d,push);
-	}
-	else if (b && right)	{
-		balanced = right->add(k,d,push);
-	}
-	else if (a || b)	{
-			ALTNode *tmp = new ALTNode(k,d,tree,this);
+	if ((a && !left) || (b && !right))	{
+		ALTNode *tmp = new ALTNode(k,d,tree,this);
 		try	{
-			lock_guard<mutex> mu(m);
 			if (!push)	{
 				tmp->setChronPrev(tree->getChronTail());
 				tmp->getChronPrev()->setChronNext(tmp);
@@ -204,12 +197,6 @@ bool ALTNode::add(string k, string d, bool push)	{
 				tmp->getChronNext()->setChronPrev(tmp);
 				tree->setChronHead(tmp);
 			}
-		}
-		catch (exception e)	{
-			cout << e.what() << endl;
-			system ("pause");
-		}
-		try	{
 			if (a)	{
 				tmp->setNext(this);
 				tmp->setPrev(prev);
@@ -229,20 +216,33 @@ bool ALTNode::add(string k, string d, bool push)	{
 				next = right = tmp;
 			}
 			balanced = tmp->a_balance();
+			m.try_lock();
+			m.unlock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 			system ("pause");
 		}
 	}
-	else if (!a && !b)	{ //multithreading might belong in this case
-		m.lock();
-		cprev = tree->getChronTail();
-		cprev->setChronNext(this);
-		tree->setChronTail(this);
-		data = d;
+	else	{
+		m.try_lock();
 		m.unlock();
-		return true;
+		//end locking logic
+		if (a && left)	{
+			balanced = left->add(k,d,push);
+		}
+		else if (b && right)	{
+			balanced = right->add(k,d,push);
+		}
+		else if (!a && !b)	{ //multithreading might belong in this case
+			m.lock();
+			cprev = tree->getChronTail();
+			cprev->setChronNext(this);
+			tree->setChronTail(this);
+			data = d;
+			m.unlock();
+			return true;
+		}
 	}
 	return balanced;
 }
@@ -262,18 +262,24 @@ bool ALTNode::a_balance()	{
 		return parent->getParent()->a_balance();
 	}
 	else if (isDirectGrandchild())	{
+		ALTNode *gp = NULL;
 		try	{
+			(gp = parent->getParent())->tryLock();
 			parent->rotate();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
 		try	{
-			if (parent)
+			if (parent)	{
+				parent->unlock();
+				if (gp)
+					gp->unlock();
 				if (parent->getParent())
 					parent->getParent()->updateSubindex();
 				else
 					parent->updateSubindex();
+			}
 			else
 				updateSubindex();
 		}
@@ -283,6 +289,10 @@ bool ALTNode::a_balance()	{
 		return true;
 	}
 	else	{
+		ALTNode *gp = NULL;
+		if (parent && parent->getParent())
+			(gp = parent->getParent())->lock();
+		m.lock();
 		try	{
 			rotate();
 		}
@@ -296,6 +306,9 @@ bool ALTNode::a_balance()	{
 			cout << e.what() << endl;
 		}
 		try	{
+			if (gp)
+				gp->unlock();
+			m.unlock();
 			if (parent)
 				if (parent->getParent())
 					parent->getParent()->updateSubindex();
@@ -520,42 +533,11 @@ void ALTNode::rotate()	{
 			*A = parent,
 			*C = this,
 			*Z = NULL;
-	bool gL = false,
-		aL = false,
-		cL = false,
-		zL = false;
-	try	{
-		cL = C->tryLock();
-	}
-	catch (exception e)	{
-		cout << e.what() << endl;
-	}
-	try	{
-		if (Gp)
-			gL = Gp->tryLock();
-	}
-	catch (exception e)	{
-		cout << e.what() << endl;
-	}
-	try	{
-		if (A)
-			aL = A->tryLock();
-	}
-	catch (exception e)	{
-		cout << e.what() << endl;
-	}
 	bool r = false;
 	if (A->getRight() == C)
 		Z = C->getLeft();
 	else	
 		Z = C->getRight();
-	try	{
-	if (Z)
-		zL = Z->tryLock();
-	}
-	catch (exception e)	{
-		cout << e.what() << endl;
-	}
 	C->setParent(Gp);
 	A->setParent(C);
 	if (A->getRight() == C)
@@ -575,19 +557,6 @@ void ALTNode::rotate()	{
 	else
 		A->setRed();
 	black = tmp;
-	try	{
-		if (gL && Gp)
-			Gp->unlock();
-		if (aL && A)
-			A->unlock();
-		if (zL && Z)
-			Z->unlock();
-		if (cL && C)
-			C->unlock();
-	}
-	catch (exception e)	{
-		cout << "" << endl;
-	}
 }
 
 void ALTNode::print()	{
@@ -675,12 +644,14 @@ void ALTNode::setBlack()	{
 
 unsigned long long ALTNode::updateSubindex()	{
 	unsigned long long l = 0, r = 0;
-	lock_guard<mutex> mu(m);
+	//while (!m.try_lock() && (left || right))
+	//	this_thread::sleep_for(chrono::milliseconds(1));
 	if (left)
 		l = left->updateSubindex();
 	if (right)
 		r = right->updateSubindex();
 	subindex = l;
+	//unlock();
 	return l + r + 1;
 }
 
@@ -800,6 +771,7 @@ void ALTNode::lock()	{
 }
 
 void ALTNode::unlock()	{
+	m.try_lock();
 	m.unlock();
 }
 
