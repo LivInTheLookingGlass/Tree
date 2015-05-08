@@ -15,8 +15,8 @@ private:
 	ALTTree *tree;
 	unsigned long long subindex;
 	bool black;
+	size_t owned;
 	mutex m;
-	bool add(string k, string d, ALTNode *n, ALTNode *p, bool push);
 	bool add(string k, string d, bool push);
 	void push(string k, string d, ALTNode *n, ALTNode *p);
 	void remove(bool verbose);
@@ -31,6 +31,7 @@ public:
 	void push(string k, string d);
 	void remove();
 	bool remove(string k);
+	bool remove(string k, bool verbose);
 	bool r_balance(ALTNode *p, ALTNode *m);
 	string search(string k);
 	string search(unsigned long long index);

@@ -17,6 +17,7 @@ ALTNode::ALTNode(string k, string d, ALTTree *t)	{
 	parent = left = right = prev = next = cprev = cnext = NULL;
 	subindex = 0;
 	black = false;
+	owned = NULL;
 }
 
 ALTNode::ALTNode(string k, string d, ALTTree *t, ALTNode *pa)	{
@@ -27,12 +28,19 @@ ALTNode::ALTNode(string k, string d, ALTTree *t, ALTNode *pa)	{
 	left = right = prev = next = cprev = cnext = NULL;
 	subindex = 0;
 	black = false;
+	owned = NULL;
 }
 
 //could probably be multithreaded
 ALTNode::~ALTNode()	{
-	delete left;
-	delete right;
+	try	{
+		delete left;
+		delete right;
+		unlock();
+	}
+	catch (exception e)	{
+		cout << e.what() << endl;
+	}
 }
 
 //could probably be multithreaded
@@ -79,107 +87,20 @@ void ALTNode::add(string k, string d)	{
 	add(k,d,false);
 }
 
-//could probably be multithreaded
-bool ALTNode::add(string k, string d, ALTNode *n, ALTNode *p, bool push)	{
-	bool balanced = false, a, b;
-	//locking logic
-	if (!this) //known balance error prevents this function from working all the time
-		return false;
-	try	{
-		lock_guard<mutex> mu(m);
-		a = k < key;
-		b = k > key;
-	}
-	catch	(exception e)	{
-		cout << e.what() << endl;
-		if (parent)
-			parent->add(k,d,n,p,push);
-		else if (tree)
-			tree->add(k,d);
-		else
-			return false;
-	}
-	//end locking logic
-	if (a && left)	{
-		balanced = left->add(k,d,this,p,push);
-	}
-	else if (b && right)	{
-		balanced = right->add(k,d,n,this,push);
-	}
-	else if (a || b)	{
-			ALTNode *tmp = new ALTNode(k,d,tree,this);
-		try	{
-			lock_guard<mutex> mu(m);
-			if (!push)	{
-				tmp->setChronPrev(tree->getChronTail());
-				tmp->getChronPrev()->setChronNext(tmp);
-				tree->setChronTail(tmp);
-			}
-			else	{
-				tmp->setChronNext(tree->getChronHead());
-				tmp->getChronNext()->setChronPrev(tmp);
-				tree->setChronHead(tmp);
-			}
-		}
-		catch (exception e)	{
-			cout << e.what() << endl;
-			system ("pause");
-		}
-		try	{
-			if (a)	{
-				tmp->setNext(this);
-				tmp->setPrev(p);
-				prev = tmp;
-				if (p)
-					p->setNext(tmp);
-				if (this == tree->getHead())
-					tree->setHead(tmp);
-				left = tmp;
-			}
-			else if (b)	{
-				tmp->setNext(n);
-				tmp->setPrev(this);
-				next = tmp;
-				if (n)
-					n->setPrev(tmp);
-				if (this == tree->getTail())
-					tree->setTail(tmp);
-				right = tmp;
-			}
-			balanced = tmp->a_balance();
-		}
-		catch (exception e)	{
-			cout << e.what() << endl;
-			system ("pause");
-		}
-	}
-	else if (!a && !b)	{ //multithreading might belong in this case
-		m.lock();
-		cprev = tree->getChronTail();
-		cprev->setChronNext(this);
-		tree->setChronTail(this);
-		data = d;
-		m.unlock();
-		return true;
-	}
-	return balanced;
-}
-
 bool ALTNode::add(string k, string d, bool push)	{
 	bool balanced = false, a, b;
 	//locking logic
-	if (!this) //known balance error prevents this function from working all the time
-		return false;
+
 	try	{
-		while (!m.try_lock())
-			this_thread::sleep_for(chrono::milliseconds(1));
+		while (!tryLock())
+			this_thread::sleep_for(chrono::milliseconds(25));
 		a = k < key;
 		b = k > key;
 	}
 	catch	(exception e)	{
 		cout << e.what() << endl;
 		if (parent)
-			parent->add(k,d,push);
+			return parent->add(k,d,push);
 		else if (tree)
 			tree->add(k,d);
 		else
@@ -217,8 +138,7 @@ bool ALTNode::add(string k, string d, bool push)	{
 				next = right = tmp;
 			}
 			balanced = tmp->a_balance();
-			m.try_lock();
-			m.unlock();
+			unlock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
@@ -226,8 +146,7 @@ bool ALTNode::add(string k, string d, bool push)	{
 		}
 	}
 	else	{
-		m.try_lock();
-		m.unlock();
+		unlock();
 		//end locking logic
 		if (a && left)	{
 			balanced = left->add(k,d,push);
@@ -236,12 +155,12 @@ bool ALTNode::add(string k, string d, bool push)	{
 			balanced = right->add(k,d,push);
 		}
 		else if (!a && !b)	{ //multithreading might belong in this case
-			m.lock();
+			lock();
 			cprev = tree->getChronTail();
 			cprev->setChronNext(this);
 			tree->setChronTail(this);
 			data = d;
-			m.unlock();
+			unlock();
 			return true;
 		}
 	}
@@ -265,7 +184,7 @@ bool ALTNode::a_balance()	{
 	else if (isDirectGrandchild())	{
 		ALTNode *gp = NULL;
 		try	{
-			(gp = parent->getParent())->tryLock();
+			(gp = parent->getParent());//->lock();
 			parent->rotate();
 		}
 		catch (exception e)	{
@@ -273,9 +192,14 @@ bool ALTNode::a_balance()	{
 		}
 		try	{
 			if (parent)	{
-				parent->unlock();
-				if (gp)
-					gp->unlock();
+				try	{
+					parent->unlock();
+					/*if (gp)
+						gp->unlock();*/		//This line causes trouble (occasional unlock of unowned mutex). Why?
+				}
+				catch (exception e)	{
+					cout << e.what() << endl;
+				}
 				if (parent->getParent())
 					parent->getParent()->updateSubindex();
 				else
@@ -293,7 +217,7 @@ bool ALTNode::a_balance()	{
 		ALTNode *gp = NULL;
 		if (parent && parent->getParent())
 			(gp = parent->getParent())->lock();
-		m.lock();
+		lock();
 		try	{
 			rotate();
 		}
@@ -309,7 +233,7 @@ bool ALTNode::a_balance()	{
 		try	{
 			if (gp)
 				gp->unlock();
-			m.unlock();
+			unlock();
 			if (parent)
 				if (parent->getParent())
 					parent->getParent()->updateSubindex();
@@ -327,7 +251,7 @@ bool ALTNode::a_balance()	{
 }
 
 void ALTNode::push(string k, string d)	{
-	add(k,d,NULL,NULL,true);
+	add(k,d,true);
 }
 
 bool ALTNode::remove(string k)	{
@@ -345,7 +269,27 @@ bool ALTNode::remove(string k)	{
 	}
 	else	{
 		lock_guard<mutex> lock(m);
-		remove(true);
+		remove();
+		r = true;
+	}
+	return r;
+}
+
+bool ALTNode::remove(string k, bool verbose)	{
+	bool r = false;
+	if (k > key)	{
+		if (right)
+			r = right->remove(k,verbose);
+	}
+	else if (k < key)	{
+		if (left)	{
+			r = left->remove(k,verbose);
+			if (r)
+				subindex--;
+		}
+	}
+	else	{
+		remove(verbose);
 		r = true;
 	}
 	return r;
@@ -363,41 +307,76 @@ void ALTNode::remove(bool verbose)	{
 		//(n)one child case
 		ALTNode *p = parent, *m = (left) ? left : right;
 		bool c = black;
+		
+		//locking logic
+		try	{
+			lock();
+			if (parent) parent->lock();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
+		try	{
+			if (m) m->lock();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
 		if (parent)
 			parent->setChild(this,m);
 		else	
 			tree->setRoot(m);
+
 		if (m)
 			m->setParent(parent);
+
 		if (prev)
 			prev->setNext(next);
 		if (next)
 			next->setPrev(prev);
+
 		if (tree->getTail() == this)
 			tree->setTail(prev);
 		if (tree->getHead() == this)
 			tree->setHead(next);
+
 		if (cprev)
 			cprev->setChronNext(cnext);
 		if (cnext)
 			cnext->setChronPrev(cprev);
+
 		if (tree->getChronTail() == this)
 			tree->setChronTail(cprev);
 		if (tree->getChronHead() == this)
 			tree->setChronHead(cnext);
+
 		left = NULL;
 		right = NULL;
-		delete this;
+
+		//unlocking logic
+		if (parent) parent->unlock();
+		if (m) m->unlock();
+		unlock();
+		try	{
+			//delete this;
+			//cout << "A memory leak has occurred (for testing purposes, of course)." << endl;
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
 		if (c)
 			r_balance(p,m);
 	}
 	//two child case
 	else	{
-		if (cprev)
-			cprev->setChronNext(cnext);
-		if (cnext)
-			cnext->setChronPrev(cprev);
-		ALTNode *k = (next) ? next : prev;
+		//locking logic
+			lock();
+			if (parent) parent->lock();
+			ALTNode *k = (next) ? next : prev;
+			if (k && k != parent) k->lock();
+
+		if (cprev)	cprev->setChronNext(cnext);
+		if (cnext)	cnext->setChronPrev(cprev);
 		data = k->get();
 		key = k->getKey();
 		if (k->getNext())
@@ -418,6 +397,12 @@ void ALTNode::remove(bool verbose)	{
 			tree->setChronHead(this);
 		if (k == tree->getChronTail())
 			tree->setChronTail(this);
+
+		//unlocking logic
+		if (parent) parent->unlock();
+		if (k) k->unlock();
+		unlock();
+
 		k->remove(false);
 	}
 }
@@ -431,7 +416,7 @@ bool ALTNode::r_balance(ALTNode *p, ALTNode *m)	{
 		return true;
 	else	{
 		ALTNode *w = p->getOppositeChild(m);//rule 6
-		if (!w->getColor())	{ //rule 7
+		if (w && !w->getColor())	{ //rule 7
 			w->rotate();
 			if (w->getParent())
 				if (w->getParent()->getParent())
@@ -442,13 +427,13 @@ bool ALTNode::r_balance(ALTNode *p, ALTNode *m)	{
 				w->updateSubindex();
 			return r_balance(p,m);
 		}
-		else if ((!w->getLeft() || w->getLeft()->getColor()) && (!w->getRight() || w->getRight()->getColor()))	{ //rule 8
+		else if (w && (!w->getLeft() || w->getLeft()->getColor()) && (!w->getRight() || w->getRight()->getColor()))	{ //rule 8
 			w->setRed();
 			m = p;
 			p = p->getParent();
 			return r_balance(p,m);
 		}
-		else if ((p->getLeft() == w && w->getLeft() && !w->getLeft()->getColor() || p->getRight() == w && w->getRight() && !w->getRight()->getColor()))	{//rule 9
+		else if (w && (p->getLeft() == w && w->getLeft() && !w->getLeft()->getColor() || p->getRight() == w && w->getRight() && !w->getRight()->getColor()))	{//rule 9
 			if (p->getLeft() == w)	
 				w->getLeft()->setBlack();
 			else	
@@ -463,7 +448,7 @@ bool ALTNode::r_balance(ALTNode *p, ALTNode *m)	{
 				w->updateSubindex();
 			return true;
 		}
-		else	{ //rule 10
+		else if (w)	{ //rule 10
 			ALTNode *z = (p->getLeft() == w) ? w->getRight() : w->getLeft();
 			z->rotate();
 			z->rotate();
@@ -790,12 +775,18 @@ void ALTNode::safeLock(vector<ALTNode*> n)	{
 }
 
 void ALTNode::lock()	{
+	//owned = this_thread::get_id().hash();
 	m.lock();
 }
 
 void ALTNode::unlock()	{
-	m.try_lock();
-	m.unlock();
+	try	{
+		m.try_lock();	
+		m.unlock();
+	}
+	catch (exception e)	{
+		cout << "unlock error: " << e.what() << endl;
+	}
 }
 
 bool ALTNode::tryLock()	{
