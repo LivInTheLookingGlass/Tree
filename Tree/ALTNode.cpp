@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <cstdarg>
 #include "ALTNode.h"
 #ifndef NAN
 	#define NAN 18446744073709551615
@@ -764,6 +765,28 @@ pair<string, unsigned long long> ALTNode::nodeStats(string k, unsigned long long
 		return pair<string, unsigned long long>(data,i+subindex);
 	else
 		return pair<string, unsigned long long>("",NAN);
+}
+
+vector<ALTNode*> ALTNode::vectorize()	{
+	va_list ap;
+	va_start(ap);
+	vector<ALTNode*> n (1);
+	ALTNode *t = va_arg(ap,ALTNode*);
+	while(t)	{
+		n.push_back(t);
+		t = va_arg(ap,ALTNode*);
+	}
+	return n;
+}
+
+void ALTNode::safeLock(vector<ALTNode*> n)	{
+	for (unsigned int i = 0; i < n.size(); i++)	{
+		if (!n[i]->tryLock())	{
+			for (unsigned int j = i - 1; j >= 0; j++)
+				n[j]->unlock();
+			i = -1;
+		}
+	}
 }
 
 void ALTNode::lock()	{
