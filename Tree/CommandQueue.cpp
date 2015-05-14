@@ -32,10 +32,11 @@ CommandQueue::CommandQueue(ALTTree *tree, int threads)	{
 
 CommandQueue::~CommandQueue()	{
 	alive = false;
-	for (CNode *tmp = head, *n = (head ? head->getNext() : NULL); tmp; tmp = n, n = (n ? n->getNext() : NULL))
-		delete tmp;
-	for (CNode *tmp = head, *p = (head ? head->getPrev() : NULL); tmp; tmp = p, p = (p ? p->getPrev() : NULL))
-		delete tmp;
+	//for (CNode *tmp = head, *n = (head ? head->getNext() : NULL); tmp; tmp = n, n = (n ? n->getNext() : NULL))
+		//delete tmp;
+	//for (CNode *tmp = head, *p = (head ? head->getPrev() : NULL); tmp; tmp = p, p = (p ? p->getPrev() : NULL))
+		//delete tmp;
+        while (head) head->dequeue();
 	//delete head;
 }
 
