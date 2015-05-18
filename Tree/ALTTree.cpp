@@ -11,7 +11,7 @@ using namespace std;
 
 ALTTree::ALTTree()	{
 #if _experimental_ == 1
-	Q = new CommandQueue(this);
+	Q = new CommandQueue(this,2);
 #endif
 	root = head = tail = chead = ctail = NULL;
 }
@@ -31,16 +31,13 @@ ALTTree::~ALTTree()	{
 }
 
 int ALTTree::Valid () {
-	m.lock();
-	int i = 0;
+	lock_guard<mutex> mu(m);
 	if (!root)
-		i = 1;
+		return 1;
 	else if (!root->getColor()) 
-		i = 0;
+		return 0;
 	else 
-		i = (root->ValidNode() != -1);
-	m.unlock();
-	return i;
+		return (root->ValidNode() != -1);
 }
 
 void ALTTree::add(string key, string data)	{
@@ -76,6 +73,13 @@ void ALTTree::enqueue(string key)	{
 bool ALTTree::remove(string key)	{
 	if (root)
 		return root->remove(key);
+	else 
+		return false;
+}
+
+bool ALTTree::remove(string key, bool verbose)	{
+	if (root)
+		return root->remove(key,verbose);
 	else 
 		return false;
 }
@@ -196,6 +200,7 @@ void ALTTree::tprint()	{
 }
 
 void ALTTree::setRoot(ALTNode *r)	{
+	lock_guard<mutex> mu(m);
 	root = r;
 }
 
@@ -221,22 +226,27 @@ void ALTTree::updateSubindex()	{
 }
 
 ALTNode *ALTTree::getRoot()	{
+	lock_guard<mutex> mu(m);
 	return root;
 }
 
 ALTNode *ALTTree::getHead()	{
+	lock_guard<mutex> mu(m);
 	return head;
 }
 
 ALTNode *ALTTree::getTail()	{
+	lock_guard<mutex> mu(m);
 	return tail;
 }
 
 ALTNode *ALTTree::getChronHead()	{
+	lock_guard<mutex> mu(m);
 	return chead;
 }
 
 ALTNode *ALTTree::getChronTail()	{
+	lock_guard<mutex> mu(m);
 	return ctail;
 }
 
@@ -272,9 +282,8 @@ void ALTTree::operator<(string key)	{
 vector<unsigned long long> ALTTree::allStats()	{
 	if (root)	{
 		vector<unsigned long long> a;
-		m.lock();
+		lock_guard<mutex> mu(m);
 		a = root->allStats();
-		m.unlock();
 		return a;
 	}
 	else	{

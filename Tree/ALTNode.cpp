@@ -311,6 +311,11 @@ void ALTNode::remove(bool verbose)	{
 		//locking logic
 		try	{
 			lock();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
+		try	{
 			if (parent) parent->lock();
 		}
 		catch (exception e)	{
@@ -327,28 +332,19 @@ void ALTNode::remove(bool verbose)	{
 		else	
 			tree->setRoot(m);
 
-		if (m)
-			m->setParent(parent);
+		if (m)	m->setParent(parent);
 
-		if (prev)
-			prev->setNext(next);
-		if (next)
-			next->setPrev(prev);
+		if (prev)	prev->setNext(next);
+		if (next)	next->setPrev(prev);
 
-		if (tree->getTail() == this)
-			tree->setTail(prev);
-		if (tree->getHead() == this)
-			tree->setHead(next);
+		if (tree->getTail() == this)	tree->setTail(prev);
+		if (tree->getHead() == this)	tree->setHead(next);
 
-		if (cprev)
-			cprev->setChronNext(cnext);
-		if (cnext)
-			cnext->setChronPrev(cprev);
+		if (cprev)	cprev->setChronNext(cnext);
+		if (cnext)	cnext->setChronPrev(cprev);
 
-		if (tree->getChronTail() == this)
-			tree->setChronTail(cprev);
-		if (tree->getChronHead() == this)
-			tree->setChronHead(cnext);
+		if (tree->getChronTail() == this)	tree->setChronTail(cprev);
+		if (tree->getChronHead() == this)	tree->setChronHead(cnext);
 
 		left = NULL;
 		right = NULL;
@@ -364,39 +360,47 @@ void ALTNode::remove(bool verbose)	{
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
-		if (c)
-			r_balance(p,m);
+		if (c)	r_balance(p,m);
 	}
 	//two child case
 	else	{
 		//locking logic
+		ALTNode *k = (next) ? next : prev;
+		try	{
 			lock();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
+		try	{
 			if (parent) parent->lock();
-			ALTNode *k = (next) ? next : prev;
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
+		try	{
+			//ALTNode *k = (next) ? next : prev;
 			if (k && k != parent) k->lock();
+		}
+		catch (exception e)	{
+			cout << e.what() << endl;
+		}
 
 		if (cprev)	cprev->setChronNext(cnext);
 		if (cnext)	cnext->setChronPrev(cprev);
 		data = k->get();
 		key = k->getKey();
-		if (k->getNext())
-			k->getNext()->setPrev(this);
+		if (k->getNext())	k->getNext()->setPrev(this);
 		cnext = k->getChronNext();
 		cprev = k->getChronPrev();
 		k->setChronNext(NULL);
 		k->setChronPrev(NULL);
-		if (cnext)
-			cnext->setChronPrev(this);
-		if (cprev)
-			cprev->setChronNext(this);
-		if (k == tree->getHead())
-			tree->setHead(this);
-		if (k == tree->getTail())
-			tree->setTail(this);
-		if (k == tree->getChronHead())
-			tree->setChronHead(this);
-		if (k == tree->getChronTail())
-			tree->setChronTail(this);
+		if (cnext)	cnext->setChronPrev(this);
+		if (cprev)	cprev->setChronNext(this);
+		if (k == tree->getHead())	tree->setHead(this);
+		if (k == tree->getTail())	tree->setTail(this);
+		if (k == tree->getChronHead())	tree->setChronHead(this);
+		if (k == tree->getChronTail())	tree->setChronTail(this);
 
 		//unlocking logic
 		if (parent) parent->unlock();

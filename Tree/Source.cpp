@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int init = 100000;
+int init = 100;
 
 ALTTree T; 
 
@@ -28,7 +28,7 @@ bool testF()	{
 	auto start = chrono::high_resolution_clock::now();
 
 	queue(0,init,true);
-	//queue(1,init,false);
+	queue(0,init,false);
 
 	chrono::duration<double> elapsed = chrono::high_resolution_clock::now() - start;
 	T.startQueue();
@@ -39,7 +39,7 @@ bool testF()	{
 	}
 	cout << "Tree population compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
 	start = chrono::high_resolution_clock::now();
-	check(0,init);
+	//check(0,init);
 	cout << "Tree searching compelete. Total time " << ((chrono::duration<double>)(chrono::high_resolution_clock::now() - start)).count() << " seconds." << endl;
 	while(getInput())
 		;

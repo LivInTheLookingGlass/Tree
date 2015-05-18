@@ -84,7 +84,7 @@ void CommandQueue::process()	{
 			CNode *input = dequeue();
 			if (input)	{
 				if (input->getCMD() == rm)	
-					t->remove(input->getInput());
+					t->remove(input->getInput(),false);
 				else if (input->getCMD() == ad)	{
 					string k, d, in = input->getInput();
 					for (int i = in.length() - 1; i >= 0; i--)	{
@@ -110,7 +110,8 @@ void CommandQueue::process()	{
 	}
 	catch (exception e)	{
 		cout << e.what() << endl;
-		system ("pause");
+		//system ("pause");
+		process();
 	}
 }
 

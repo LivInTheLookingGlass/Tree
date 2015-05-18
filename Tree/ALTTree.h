@@ -38,6 +38,7 @@ public:
 	void push(string key);
 	void enqueue(string key);
 	bool remove(string key);
+	bool remove(string key, bool verbose);
 	bool undo();
 	string search(string key);
 	unsigned long long getIndex(string key);
