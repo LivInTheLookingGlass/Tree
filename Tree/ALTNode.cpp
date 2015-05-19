@@ -11,6 +11,7 @@
 using namespace std;
 
 ALTNode::ALTNode(string k, string d, ALTTree *t)	{
+	srand(time(NULL));
 	key = k;
 	data = d;
 	tree = t;
@@ -21,6 +22,7 @@ ALTNode::ALTNode(string k, string d, ALTTree *t)	{
 }
 
 ALTNode::ALTNode(string k, string d, ALTTree *t, ALTNode *pa)	{
+	srand(time(NULL));
 	key = k;
 	data = d;
 	tree = t;
@@ -90,7 +92,8 @@ void ALTNode::add(string k, string d)	{
 bool ALTNode::add(string k, string d, bool push)	{
 	bool balanced = false, a, b;
 	//locking logic
-
+	if (!this) 
+		return false;		//don't know why this line is necessary, suspecting Visual Studio compiler error
 	try	{
 		while (!tryLock())
 			this_thread::sleep_for(chrono::milliseconds(25));
@@ -111,7 +114,7 @@ bool ALTNode::add(string k, string d, bool push)	{
 		try	{
 			if (!push)	{
 				tmp->setChronPrev(tree->getChronTail());
-				tmp->getChronPrev()->setChronNext(tmp);
+				if (tmp->getChronPrev()) tmp->getChronPrev()->setChronNext(tmp);
 				tree->setChronTail(tmp);
 			}
 			else	{
@@ -154,7 +157,7 @@ bool ALTNode::add(string k, string d, bool push)	{
 		else if (b && right)	{
 			balanced = right->add(k,d,push);
 		}
-		else if (!a && !b)	{ //multithreading might belong in this case
+		else if (!a && !b)	{
 			lock();
 			cprev = tree->getChronTail();
 			cprev->setChronNext(this);
@@ -194,8 +197,7 @@ bool ALTNode::a_balance()	{
 			if (parent)	{
 				try	{
 					parent->unlock();
-					/*if (gp)
-						gp->unlock();*/		//This line causes trouble (occasional unlock of unowned mutex). Why?
+					//if (gp)	gp->unlock();		//This line causes trouble (occasional unlock of unowned mutex). Why?
 				}
 				catch (exception e)	{
 					cout << e.what() << endl;
@@ -310,19 +312,20 @@ void ALTNode::remove(bool verbose)	{
 		
 		//locking logic
 		try	{
-			lock();
+			//lock();
+			safeLock(vectorize(3,this,parent,m));
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
 		try	{
-			if (parent) parent->lock();
+			//if (parent) parent->lock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
 		try	{
-			if (m) m->lock();
+			//if (m) m->lock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
@@ -367,20 +370,21 @@ void ALTNode::remove(bool verbose)	{
 		//locking logic
 		ALTNode *k = (next) ? next : prev;
 		try	{
-			lock();
+			//lock();
+			safeLock(vectorize(3,this,k,parent));
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
 		try	{
-			if (parent) parent->lock();
+			//if (parent) parent->lock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
 		}
 		try	{
 			//ALTNode *k = (next) ? next : prev;
-			if (k && k != parent) k->lock();
+			//if (k && k != parent) k->lock();
 		}
 		catch (exception e)	{
 			cout << e.what() << endl;
@@ -756,12 +760,12 @@ pair<string, unsigned long long> ALTNode::nodeStats(string k, unsigned long long
 		return pair<string, unsigned long long>("",NAN);
 }
 
-vector<ALTNode*> ALTNode::vectorize()	{
+vector<ALTNode*> ALTNode::vectorize(int ln, ...)	{
 	va_list ap;
-	va_start(ap);
-	vector<ALTNode*> n (1);
+	va_start(ap,ln);
+	vector<ALTNode*> n (0);
 	ALTNode *t = va_arg(ap,ALTNode*);
-	while(t)	{
+	for (int i = 0; i < ln; i++)	{
 		n.push_back(t);
 		t = va_arg(ap,ALTNode*);
 	}
@@ -769,11 +773,12 @@ vector<ALTNode*> ALTNode::vectorize()	{
 }
 
 void ALTNode::safeLock(vector<ALTNode*> n)	{
-	for (unsigned int i = 0; i < n.size(); i++)	{
-		if (!n[i]->tryLock())	{
-			for (unsigned int j = i - 1; j >= 0; j++)
-				n[j]->unlock();
+	for (int i = 0; i < n.size(); i++)	{
+		if (n[i] && !n[i]->tryLock())	{
+			for (int j = i - 1; j >= 0; j--)
+				if (n[j])	n[j]->unlock();
 			i = -1;
+			this_thread::sleep_for(chrono::milliseconds(rand() % 20));
 		}
 	}
 }

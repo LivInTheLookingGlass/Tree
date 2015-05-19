@@ -2,11 +2,13 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <conio.h>
+#include <future>
 #include "Header.h"
 
 using namespace std;
 
-int init = 100;
+int init = 1000;
 
 ALTTree T; 
 
@@ -44,8 +46,30 @@ bool testF()	{
 	while(getInput())
 		;
 
-	queue(init,18446744073709551615,true);
-
+	auto b = async(launch::async,[](int init){queue(init,18446744073709551615,true);},init);
+	this_thread::sleep_for(chrono::milliseconds(10));
+	cout << "Ready to listen." << endl;
+	while (!T.isQueueEmpty())	{
+		if (kbhit())	{
+			T.pauseQueue();
+			getch();
+			getch();
+			this_thread::sleep_for(chrono::seconds(1));
+			vector<unsigned long long> stat = T.allStats();
+			cout << "There are " << stat[0] << " nodes in the tree." << endl
+				<< "The shortest path is " << stat[1] << " nodes." << endl
+				<< "The longest path is " << stat[2] << " nodes." << endl;
+			if (T.Valid())
+				cout << "The tree is Red-Black valid." << endl;
+			else	{
+				cout << "This tree is invalid." << endl;
+				system ("pause");
+			}
+			T.startQueue();
+		}
+	}
+	cout << "Done listening." << endl;
+	b.get();
 	return false;
 }
 

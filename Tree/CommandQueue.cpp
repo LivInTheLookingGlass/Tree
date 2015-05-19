@@ -36,7 +36,7 @@ CommandQueue::~CommandQueue()	{
 		//delete tmp;
 	//for (CNode *tmp = head, *p = (head ? head->getPrev() : NULL); tmp; tmp = p, p = (p ? p->getPrev() : NULL))
 		//delete tmp;
-        while (head) head->dequeue();
+        while (head) dequeue();
 	//delete head;
 }
 
@@ -78,7 +78,7 @@ bst::cpp_int CommandQueue::size()	{
 void CommandQueue::process()	{
 	try	{
 		int i = 0;
-		this_thread::sleep_for(chrono::seconds(3));
+		//this_thread::sleep_for(chrono::seconds(3));
 		cout << "Thread awake." << endl;
 		while (alive)	{
 			CNode *input = dequeue();

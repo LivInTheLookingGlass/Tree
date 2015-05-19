@@ -77,6 +77,8 @@ public:
 	vector<unsigned long long> allStats();
 	pair<string, unsigned long long> nodeStats(string k);
 	pair<string, unsigned long long> nodeStats(string k, unsigned long long i);
+	vector<ALTNode*> vectorize(int ln, ...);
+	void safeLock(vector<ALTNode*> n);
 };
 
 
