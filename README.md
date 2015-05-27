@@ -1,6 +1,8 @@
 # Tree
 An alternative, versatile database based off the Red Black Tree
 
+Support this project's development with Bitcoin at [changetip] (http://gabe.appleton.tip.me) or my [wallet] (https://blockchain.info/address/1JTGcHS3GMhBGLcFRuHLk6Gww4ZEDmP7u9).
+
 ---
 
 ## API
